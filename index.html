@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursor Study - Research Tracker</title>
+    
+    <!-- Supabase Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        body { 
+            margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f0f2f5; overflow: hidden; height: 100vh; width: 100vw; 
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            cursor: default;
+        }
+        
+        #ui-container { 
+            position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); text-align: center; z-index: 100; 
+        }
+
+        .instructions { 
+            background: white; padding: 30px 50px; border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+        }
+        
+        #target {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            background: #ff4757;
+            border-radius: 50%;
+            display: none;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+            z-index: 50;
+            transition: transform 0.1s;
+        }
+
+        #target:active { transform: scale(0.9); }
+        
+        button { 
+            padding: 15px 30px; font-size: 20px; cursor: pointer; 
+            border-radius: 8px; border: none; background: #007bff; color: white;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #0056b3; }
+
+        #session-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="session-counter"></div>
+
+    <div id="ui-container">
+        <div class="instructions" id="infoBox">
+            <h2 id="msg">Cursor Movement Recorder</h2>
+            <p id="sub-msg">Click on the red dots to complete each session.</p>
+            <button id="actionBtn">Start Session 1</button>
+        </div>
+    </div>
+
+    <div id="target"></div>
+
+    <script>
+        // SUPABASE CONFIGURATION
+        const SUPABASE_URL = 'https://ethelgloyttqwuodmilz.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aGVsZ2xveXR0cXd1b2RtaWx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MTk3ODEsImV4cCI6MjA5MjQ5NTc4MX0.JaYVblaEeeSDH5Sw4HrMwkH14f3r_Cywqqi9ozRbDy4';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // PARTICIPANT ID
+        const participantID = "P-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+        console.log("Welcome! Your Participant ID is:", participantID);
+
+        let trajectory = [];
+        let isRecording = false;
+        let currentSession = 1;
+        let clicksInCurrentSession = 0;
+        
+        const totalSessions = 10;
+        const clicksPerSession = 5;
+
+        const target = document.getElementById('target');
+        const actionBtn = document.getElementById('actionBtn');
+        const infoBox = document.getElementById('infoBox');
+        const msg = document.getElementById('msg');
+        const subMsg = document.getElementById('sub-msg');
+        const counter = document.getElementById('session-counter');
+
+        // Capture movement
+        window.addEventListener('mousemove', (e) => {
+            if (isRecording) {
+                trajectory.push({
+                    t: new Date().toISOString(),
+                    x: e.clientX,
+                    y: e.clientY,
+                    session: currentSession
+                });
+            }
+        });
+
+        function moveTarget() {
+            if (clicksInCurrentSession >= clicksPerSession) {
+                endSession();
+                return;
+            }
+
+            let x, y;
+
+            const path1 = [{ x: 250, y: 90 }, { x: 640, y: 450 }, { x: 900, y: 233 }, { x: 918, y: 503 }, { x: 1179, y: 547 }];
+            const path2 = [{ x: 745, y: 130 }, { x: 300, y: 190 }, { x: 1200, y: 290 }, { x: 690, y: 500 }, { x: 580, y: 150 }];
+            const path3 = [{ x: 1250, y: 320 }, { x: 180, y: 130 }, { x: 500, y: 240 }, { x: 1070, y: 90 }, { x: 150, y: 500 }];
+            const path4 = [{ x: 1250, y: 510 }, { x: 140, y: 90 }, { x: 490, y: 350 }, { x: 410, y: 390 }, { x: 840, y: 220 }];
+            const path5 = [{ x: 700, y: 308 }, { x: 800, y: 250 }, { x: 760, y: 150 }, { x: 150, y: 400 }, { x: 420, y: 200 }];
+            const path6 = [{ x: 200, y: 100 }, { x: 1000, y: 190 }, { x: 260, y: 300 }, { x: 900, y: 480 }, { x: 600, y: 80 }];
+
+            if (currentSession === 1 || currentSession === 10) {
+                x = path1[clicksInCurrentSession].x;
+                y = path1[clicksInCurrentSession].y;
+            } 
+            else if (currentSession === 2) {
+                x = path2[clicksInCurrentSession].x;
+                y = path2[clicksInCurrentSession].y;
+            } 
+            else if (currentSession === 4) {
+                x = path3[clicksInCurrentSession].x;
+                y = path3[clicksInCurrentSession].y;
+            } 
+            else if (currentSession === 5) {
+                x = path4[clicksInCurrentSession].x;
+                y = path4[clicksInCurrentSession].y;
+            } 
+            else if (currentSession === 7) {
+                x = path5[clicksInCurrentSession].x;
+                y = path5[clicksInCurrentSession].y;
+            } 
+            else if (currentSession === 9) {
+                x = path6[clicksInCurrentSession].x;
+                y = path6[clicksInCurrentSession].y;
+            } 
+            else {
+                const margin = 150;
+                x = Math.random() * (window.innerWidth - margin * 2) + margin;
+                y = Math.random() * (window.innerHeight - margin * 2) + margin;
+            }
+
+            const targetSize = 40; 
+            if (x > window.innerWidth - targetSize) x = window.innerWidth - targetSize;
+            if (y > window.innerHeight - targetSize) y = window.innerHeight - targetSize;
+            if (x < targetSize) x = targetSize;
+            if (y < targetSize) y = targetSize;
+
+            target.style.left = `${x}px`;
+            target.style.top = `${y}px`;
+            target.style.display = 'block';
+            
+            clicksInCurrentSession++;
+            counter.innerText = `ID: ${participantID} | Session: ${currentSession} | Target: ${clicksInCurrentSession}/${clicksPerSession}`;
+        }
+
+        actionBtn.onclick = () => {
+            infoBox.style.display = 'none';
+            clicksInCurrentSession = 0;
+            setTimeout(() => {
+                isRecording = true;
+                moveTarget();
+            }, 300);
+        };
+
+        target.onclick = (e) => {
+            e.stopPropagation();
+            moveTarget();
+        };
+
+        function endSession() {
+            isRecording = false;
+            target.style.display = 'none';
+            infoBox.style.display = 'block';
+            counter.innerText = "";
+
+            if (currentSession < totalSessions) {
+                msg.innerText = `Session ${currentSession}/10 Complete`;
+                currentSession++;
+                actionBtn.innerText = `Start Session ${currentSession}`;
+            } else {
+                saveToDatabase();
+            }
+        }
+
+        async function saveToDatabase() {
+            msg.innerText = "Study Complete!";
+            subMsg.innerText = "Uploading data for " + participantID + "...";
+            actionBtn.style.display = 'none';
+
+            // Mapping data
+            const uploadData = trajectory.map(p => ({
+                participant_id: participantID,
+                session_id: p.session,
+                x_pos: p.x,
+                y_pos: p.y,
+                timestamp_ms: p.t
+            }));
+
+            try {
+                console.log(`Uploading ${uploadData.length} rows for ${participantID}`);
+                
+                const { data, error } = await _supabase
+                    .from('cursor_data')
+                    .insert(uploadData);
+
+                if (error) throw error;
+
+                msg.innerText = "Successfully Synced!";
+                subMsg.innerText = `Thank you for participanting!`;
+                console.log("Upload Success");
+
+            } catch (err) {
+                console.error("FULL ERROR DETAILS:", err);
+                msg.innerText = "Upload Error";
+                subMsg.innerText = "Error: " + err.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -19,14 +19,23 @@
             cursor: default;
         }
         
+        /* This is the part that centers your messages */
         #ui-container { 
-            position: absolute; top: 50%; left: 50%; 
-            transform: translate(-50%, -50%); text-align: center; z-index: 100; 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            text-align: center; 
+            z-index: 100; 
+            width: 100%; /* Ensures text aligns to center of the window */
         }
 
         .instructions { 
-            background: white; padding: 30px 50px; border-radius: 15px; 
+            background: white; 
+            padding: 30px 50px; 
+            border-radius: 15px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            display: inline-block; /* Wraps background tightly around text */
         }
         
         #target {
@@ -48,6 +57,7 @@
             padding: 15px 30px; font-size: 20px; cursor: pointer; 
             border-radius: 8px; border: none; background: #007bff; color: white;
             transition: background 0.2s;
+            margin-top: 15px;
         }
 
         button:hover { background: #0056b3; }
@@ -63,7 +73,10 @@
 </head>
 <body>
 
-div id="ui-container">
+    <div id="session-counter"></div>
+
+    <!-- RESTORED UI CONTAINER -->
+    <div id="ui-container">
         <div class="instructions" id="infoBox">
             <h2 id="msg">Cursor Movement Recorder</h2>
             <p id="sub-msg">
@@ -86,7 +99,6 @@ div id="ui-container">
 
         // PARTICIPANT ID
         const participantID = "P-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-        console.log("Welcome! Your Participant ID is:", participantID);
 
         let trajectory = [];
         let isRecording = false;
@@ -103,7 +115,6 @@ div id="ui-container">
         const subMsg = document.getElementById('sub-msg');
         const counter = document.getElementById('session-counter');
 
-        // Capture movement
         window.addEventListener('mousemove', (e) => {
             if (isRecording) {
                 trajectory.push({
@@ -198,6 +209,8 @@ div id="ui-container">
                 msg.innerText = `Session ${currentSession}/10 Complete`;
                 currentSession++;
                 actionBtn.innerText = `Start Session ${currentSession}`;
+                // Keep the mouse instruction visible between sessions
+                subMsg.innerHTML = `Click on the red dots to complete each session.<br><strong style="color: #d63031; display: block; margin-top: 10px;">IMPORTANT: The tasks must be completed using a mouse.</strong>`;
             } else {
                 saveToDatabase();
             }
@@ -208,7 +221,6 @@ div id="ui-container">
             subMsg.innerText = "Uploading data for " + participantID + "...";
             actionBtn.style.display = 'none';
 
-            // Mapping data
             const uploadData = trajectory.map(p => ({
                 participant_id: participantID,
                 session_id: p.session,
@@ -218,8 +230,6 @@ div id="ui-container">
             }));
 
             try {
-                console.log(`Uploading ${uploadData.length} rows for ${participantID}`);
-                
                 const { data, error } = await _supabase
                     .from('cursor_data')
                     .insert(uploadData);
@@ -227,11 +237,8 @@ div id="ui-container">
                 if (error) throw error;
 
                 msg.innerText = "Successfully Synced!";
-                subMsg.innerText = `Thank you for participanting!`;
-                console.log("Upload Success");
-
+                subMsg.innerText = `Thank you for participating!`;
             } catch (err) {
-                console.error("FULL ERROR DETAILS:", err);
                 msg.innerText = "Upload Error";
                 subMsg.innerText = "Error: " + err.message;
             }
